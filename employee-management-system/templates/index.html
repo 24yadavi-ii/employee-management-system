@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Employee Management System | College Mini-Project</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <header class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+                <div class="brand-text">
+                    <h1>Employee Management System</h1>
+                    <span class="sub-brand">College Mini-Project &bull; Flask &bull; SQLite &bull; REST API</span>
+                </div>
+            </div>
+            <div class="nav-status">
+                <span class="badge live-badge"><span class="dot"></span> System Online</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="main-container">
+        <!-- Floating Toast Notification Container -->
+        <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+        <!-- Section: Metric Summary Cards (Dashboard) -->
+        <section class="dashboard-section" aria-label="Dashboard Overview">
+            <div class="section-title">
+                <h2>Overview Dashboard</h2>
+                <p>Real-time metrics calculated dynamically from SQLite database</p>
+            </div>
+            <div class="stats-grid">
+                <!-- Card 1: Total Employees -->
+                <div class="stat-card stat-blue">
+                    <div class="stat-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Total Employees</span>
+                        <span class="stat-value" id="stat-total-employees">0</span>
+                    </div>
+                </div>
+
+                <!-- Card 2: Total Departments -->
+                <div class="stat-card stat-sky">
+                    <div class="stat-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Total Departments</span>
+                        <span class="stat-value" id="stat-total-departments">0</span>
+                    </div>
+                </div>
+
+                <!-- Card 3: Total Payroll -->
+                <div class="stat-card stat-emerald">
+                    <div class="stat-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="1" x2="12" y2="23"></line>
+                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Total Payroll</span>
+                        <span class="stat-value" id="stat-total-payroll">₹0</span>
+                    </div>
+                </div>
+
+                <!-- Card 4: Designations -->
+                <div class="stat-card stat-indigo">
+                    <div class="stat-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Distinct Designations</span>
+                        <span class="stat-value" id="stat-total-designations">0</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Workspace: Form & Directory -->
+        <div class="workspace-grid">
+            <!-- Left Column: Add / Edit Form -->
+            <section class="card form-card" aria-label="Employee Form">
+                <div class="card-header">
+                    <h3 id="form-heading">Add New Employee</h3>
+                    <p id="form-subheading">Fill in all fields to register an employee record.</p>
+                </div>
+                <div class="card-body">
+                    <form id="employee-form" novalidate>
+                        <!-- Hidden primary key for edit mode -->
+                        <input type="hidden" id="employee-db-id" value="">
+
+                        <!-- Employee ID -->
+                        <div class="form-group">
+                            <label for="emp-id">Employee ID <span class="required">*</span></label>
+                            <input type="text" id="emp-id" name="employee_id" placeholder="e.g. EMP101" autocomplete="off" required>
+                            <span class="field-error" id="error-emp-id"></span>
+                        </div>
+
+                        <!-- Full Name -->
+                        <div class="form-group">
+                            <label for="emp-name">Full Name <span class="required">*</span></label>
+                            <input type="text" id="emp-name" name="name" placeholder="e.g. Aarav Sharma" autocomplete="name" required>
+                            <span class="field-error" id="error-emp-name"></span>
+                        </div>
+
+                        <!-- Department -->
+                        <div class="form-group">
+                            <label for="emp-dept">Department <span class="required">*</span></label>
+                            <input type="text" id="emp-dept" name="department" placeholder="e.g. Engineering, Sales, HR" required>
+                            <span class="field-error" id="error-emp-dept"></span>
+                        </div>
+
+                        <!-- Designation -->
+                        <div class="form-group">
+                            <label for="emp-designation">Designation <span class="required">*</span></label>
+                            <input type="text" id="emp-designation" name="designation" placeholder="e.g. Software Engineer" required>
+                            <span class="field-error" id="error-emp-designation"></span>
+                        </div>
+
+                        <!-- Salary -->
+                        <div class="form-group">
+                            <label for="emp-salary">Salary (₹) <span class="required">*</span></label>
+                            <input type="number" id="emp-salary" name="salary" placeholder="e.g. 50000" min="0" step="any" required>
+                            <span class="field-error" id="error-emp-salary"></span>
+                        </div>
+
+                        <!-- Contact Number -->
+                        <div class="form-group">
+                            <label for="emp-contact">Contact Number (10 Digits) <span class="required">*</span></label>
+                            <input type="text" id="emp-contact" name="contact" placeholder="e.g. 9876543210" maxlength="10" required>
+                            <span class="field-error" id="error-emp-contact"></span>
+                        </div>
+
+                        <!-- Form Buttons -->
+                        <div class="form-actions">
+                            <button type="submit" id="btn-submit" class="btn btn-primary">
+                                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                </svg>
+                                <span id="btn-submit-text">Add Employee</span>
+                            </button>
+                            <button type="button" id="btn-reset" class="btn btn-secondary">
+                                <span id="btn-reset-text">Reset Form</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Right Column: Employee Directory & Search -->
+            <section class="card table-card" aria-label="Employee Directory">
+                <div class="card-header table-card-header">
+                    <div>
+                        <h3>Employee Records</h3>
+                        <p>Browse, dynamically search, edit, or delete existing employees</p>
+                    </div>
+                    <!-- Live Record Counter -->
+                    <div class="records-pill">
+                        <span id="records-counter-text">Showing 0 records</span>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <!-- Search & Action Toolbar -->
+                    <div class="toolbar">
+                        <div class="search-box">
+                            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                            <input type="text" id="search-input" placeholder="Search by Employee ID, Name, or Department..." autocomplete="off">
+                            <button type="button" id="btn-clear-search" class="btn-clear" title="Clear Search" aria-label="Clear Search">&times;</button>
+                        </div>
+                        <button type="button" id="btn-refresh" class="btn btn-outline" title="Refresh Table">
+                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M23 4v6h-6"></path>
+                                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                            </svg>
+                            Refresh
+                        </button>
+                    </div>
+
+                    <!-- Loading State -->
+                    <div id="loading-spinner" class="loading-container hidden">
+                        <div class="spinner"></div>
+                        <p>Communicating with server...</p>
+                    </div>
+
+                    <!-- Table Responsive Container -->
+                    <div class="table-responsive">
+                        <table class="data-table" id="employees-table">
+                            <thead>
+                                <tr>
+                                    <th>Emp ID</th>
+                                    <th>Full Name</th>
+                                    <th>Department</th>
+                                    <th>Designation</th>
+                                    <th>Salary (₹)</th>
+                                    <th>Contact</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="employees-tbody">
+                                <!-- Populated dynamically by script.js -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Empty State Message -->
+                    <div id="empty-state" class="empty-state hidden">
+                        <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <line x1="17" y1="8" x2="23" y2="14"></line>
+                            <line x1="23" y1="8" x2="17" y2="14"></line>
+                        </svg>
+                        <h4 id="empty-state-title">No Employees Found</h4>
+                        <p id="empty-state-desc">No employee records have been registered yet. Add your first employee using the form on the left.</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Delete Confirmation Modal Dialog -->
+    <div id="delete-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div class="modal-icon-danger">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                        <line x1="12" y1="9" x2="12" y2="13"></line>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                </div>
+                <div class="modal-title-text">
+                    <h3 id="modal-title">Confirm Employee Deletion</h3>
+                    <p>Are you sure you want to permanently delete this record? This action cannot be undone.</p>
+                </div>
+            </div>
+            <div class="modal-body">
+                <p><strong>Employee:</strong> <span id="modal-employee-name"></span> (<span id="modal-employee-id"></span>)</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="btn-cancel-delete" class="btn btn-secondary">Cancel</button>
+                <button type="button" id="btn-confirm-delete" class="btn btn-danger">Yes, Delete Record</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Footer -->
+    <footer class="footer">
+        <p>Employee Management System &bull; College Mini-Project &bull; Python Flask + SQLite + Vanilla JS</p>
+    </footer>
+
+    <!-- Vanilla JavaScript File -->
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
